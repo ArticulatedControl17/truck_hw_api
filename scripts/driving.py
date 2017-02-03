@@ -13,79 +13,73 @@ MIN_STEERING = -25
 ZERO_SPEED = 46
 ZERO_STEERING = 50
 
+GEAR_1_SIGNAL = -100
+GEAR_2_SIGNAL = 0
+GEAR_3_SIGNAL = 70
+
 class Truck:
 	def __init__(self):
 		self.Reset()
 
-	def Reset(self):
+	def reset(self):
 		self.speed = ZERO_SPEED
 		self.steering = ZERO_STEERING
-		self.gear = 1
+		self.gear_signal = MIN_GEAR
 
-	def Update(self):
+	def update(self):
 		SetServo(motorPin, self.speed)
 		SetServo(steeringPin, self.steering)
 		SetServo(gearPin, self.gear)
 
-	def Shift(self, diff):
-		gear = self.gear + diff
-		if gear < 1:
-			gear = 1
-		elif gear > 3:
-			gear = 3
-		self.gear = gear
+	def setGear(self, gear):
+		if gear == 3:
+			gear_signal = GEAR_3_SIGNAL
+		elif gear == 2:
+			gear_signal = GEAR_2_SIGNAL
+		elif gear == 1:
+			gear_signal = GEAR_1_SIGNAL
+		else:
+        	# Default to low gear
+			gear_signal = GEAR_1_SIGNAL
 
-	def SetSpeed(self, speed):
+	def setSpeed(self, speed):
 		if speed > MAX_SPEED:
 			speed = MAX_SPEED
 		elif speed < MIN_SPEED:
 			speed = MIN_SPEED
 		self.speed = speed
 
-	def SetSteering(self, steering):
+	def setSteering(self, steering):
 		if steering > MAX_STEERING:
 			steering = MAX_STEERING
 		elif steering < MIN_STEERING:
 			steering = MIN_STEERING
 		self.steering = steering
 
-def SetServo(pin, angle):
-        duty = 0.15 + float(angle) / 100 * 0.05
+
+def setServo(pin, angle):
+	duty = 0.15 + float(angle) / 100 * 0.05
 	f = open(pwmDev, "w")
 	command = "{}={}\n".format(pin, duty)
 	f.write(command)
 	f.close()
 
-def ResetTruck():
-	SetServo(motorPin, ZERO_SPEED)
-	SetServo(steeringPin, ZERO_STEERING)
-	SetGear(1)
 
-
-def SetGear(gear):
-	if gear == 3:
-		gearSignal = 70
-	elif gear == 2:
-		gearSignal = 0
-	elif gear == 1:
-		gearSignal = -100
-        else:
-        	# Default to low gear
-        	gearSignal = -100
-	SetServo(gearPin, gearSignal)
-
-def InterruptHandler(sig, frame):
+	
+	
+def interruptHandler(sig, frame):
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
 	print("Interrupted, reset servo...")
 	# Return to neutral
-	ResetTruck()
+	truck = Truck()
+	truck.resetTruck()
 	time.sleep(0.4)
 	exit(0)
 
 signal.signal(signal.SIGINT, InterruptHandler)
 
-def KeyboardControl():
-        truck = Truck()
+def keyboardControl():
+	truck = Truck()
 	motorSpeed = ZERO_SPEED
 	steeringAngle = ZERO_STEERING
 	gear = 1
@@ -99,31 +93,28 @@ def KeyboardControl():
 				key = getch.getch()
 				if key == 'A':
 					motorSpeed += 2
-                                        truck.SetSpeed(motorSpeed)
 				elif key == 'B':
 					motorSpeed -= 2
-					truck.SetSpeed(motorSpeed)
 				elif key == 'C':
 					steeringAngle += 1
-					truck.SetSteering(steeringAngle)
 				elif key == 'D':
 					steeringAngle -= 1
-					truck.SetSteering(steeringAngle)
 				else:
 					print("Unknown key {}".format(key))
 		elif key == 'a':
-                	if gear < 3:
+			if gear < 3:
 				gear += 1
 		elif key == 'z':
 			if gear > 1:
 				gear -= 1
 		elif key == 'x':
-                        motorSpeed = ZERO_SPEED
+			motorSpeed = ZERO_SPEED
 			steeringAngle = ZERO_STEERING
 			gear = 1
-			truck.Reset()
+			truck.reset()
 		elif key == '\x03':
-			InterruptHandler(None, None)
+			interruptHandler(None, None)
+			truck.reset()
 			exit(0)
 		else:
 			print("Unknown key {}".format(key))
@@ -131,18 +122,11 @@ def KeyboardControl():
 			steeringAngle = ZERO_STEERING
 			gear = 1
 			truck.Reset()
+		
 		print("Motor: {}, Steering: {}, Gear: {}".format(motorSpeed, steeringAngle, gear))
-		truck.Update()
+		
+		truck.setSpeed(motorSpeed)
+		truck.setSteering(steeringAngle)
+		truck.setGear(gear)
+		truck.update()
 
-def Loop():
-	print("Entering Loop function")
-	delay = 0.1
-	while "pigs can't fly":
-		for angle in range(-10, 120, 1):
-			SetServo(servoPin, angle)
-			time.sleep(delay)
-		for angle in range(120, -10, -1):
-			SetServo(servoPin, angle)
-			time.sleep(delay)
-
-#KeyboardControl()
