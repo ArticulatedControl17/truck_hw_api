@@ -6,6 +6,8 @@ from hw_api_ackermann.msg import AckermannDrive
 
 truck = Truck()
 
+
+
 def callback(data):
 	#rospy.loginfo(rospy.get_caller_id() + "steering: %s, speed: %s", data.steering_angle, data.speed)
 	truck.setSteering(data.steering_angle)
