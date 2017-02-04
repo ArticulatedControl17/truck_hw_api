@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 import rospy
+import signal
+import atexit
+import time
+import os
 from driving import Truck
 from hw_api_ackermann.msg import AckermannDrive
 
@@ -27,9 +31,12 @@ class TruckNode:
 
 
     def readDictionaries(self):
-        with open('dicts/angle_dict.txt', 'r') as ad, \
-             open('dicts/backward_speed_dict.txt','r') as bd, \
-             open('dicts/forward_speed_dict.txt','r') as fd:
+        dirpath = os.path.dirname(os.path.abspath(__file__))
+
+        
+        with open(os.path.join(dirpath, 'dicts/angle_dict.txt'), 'r') as ad, \
+             open(os.path.join(dirpath, 'dicts/backward_speed_dict.txt'),'r') as bd, \
+             open(os.path.join(dirpath, 'dicts/forward_speed_dict.txt'),'r') as fd:
             
             self.angle_dict = eval(ad.read())
             self.speed_backward_dict = eval(bd.read())
@@ -92,6 +99,26 @@ class TruckNode:
             self.truck.update()
             rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
             rospy.spin()
+
+
+def interruptHandler(sig, frame):
+	signal.signal(signal.SIGINT, signal.SIG_IGN)
+	print("Interrupted, reset servo...")
+	# Return to neutral
+	truck = TruckNode()
+	truck.truck.reset()
+	truck.truck.update()
+	time.sleep(0.4)
+	exit(0)
+
+def exit_handler():
+        truck = TruckNode()
+        truck.truck.reset()
+        truck.truck.update()
+        exit(0)
+
+signal.signal(signal.SIGINT, interruptHandler)
+atexit.register(exit_handler)
 
 if __name__ == '__main__':
 	TruckNode().listener()
