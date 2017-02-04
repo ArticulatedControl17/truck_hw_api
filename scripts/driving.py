@@ -1,6 +1,7 @@
 import time
 import signal
 import getch
+import atexit
 
 pwmDev = "/dev/pi-blaster"
 motorPin = 17
@@ -29,7 +30,7 @@ class Truck:
 	def update(self):
 		setServo(motorPin, self.speed)
 		setServo(steeringPin, self.steering)
-		setServo(gearPin, self.gear)
+		setServo(gearPin, self.gear_signal)
 
 	def setGear(self, gear):
 		if gear == 3:
@@ -72,11 +73,19 @@ def interruptHandler(sig, frame):
 	print("Interrupted, reset servo...")
 	# Return to neutral
 	truck = Truck()
-	truck.resetTruck()
+	truck.reset()
+	truck.update()
 	time.sleep(0.4)
 	exit(0)
 
+def exit_handler():
+        truck = Truck()
+        truck.reset()
+        truck.update()
+        exit(0)
+
 signal.signal(signal.SIGINT, interruptHandler)
+atexit.register(exit_handler)
 
 def keyboardControl():
 	truck = Truck()
@@ -108,6 +117,7 @@ def keyboardControl():
 			if gear > 1:
 				gear -= 1
 		elif key == 'x':
+                        a = 1/0
 			motorSpeed = ZERO_SPEED
 			steeringAngle = ZERO_STEERING
 			gear = 1
@@ -115,13 +125,15 @@ def keyboardControl():
 		elif key == '\x03':
 			interruptHandler(None, None)
 			truck.reset()
+			truck.update()
 			exit(0)
 		else:
 			print("Unknown key {}".format(key))
 			motorSpeed = ZERO_SPEED
 			steeringAngle = ZERO_STEERING
 			gear = 1
-			truck.Reset()
+			truck.reset()
+			truck.update()
 		
 		print("Motor: {}, Steering: {}, Gear: {}".format(motorSpeed, steeringAngle, gear))
 		
@@ -130,3 +142,6 @@ def keyboardControl():
 		truck.setGear(gear)
 		truck.update()
 
+
+if __name__ == "__main__":
+        keyboardControl()
