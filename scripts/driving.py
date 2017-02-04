@@ -19,17 +19,17 @@ GEAR_3_SIGNAL = 70
 
 class Truck:
 	def __init__(self):
-		self.Reset()
+		self.reset()
 
 	def reset(self):
 		self.speed = ZERO_SPEED
 		self.steering = ZERO_STEERING
-		self.gear_signal = MIN_GEAR
+		self.gear_signal = GEAR_1_SIGNAL
 
 	def update(self):
-		SetServo(motorPin, self.speed)
-		SetServo(steeringPin, self.steering)
-		SetServo(gearPin, self.gear)
+		setServo(motorPin, self.speed)
+		setServo(steeringPin, self.steering)
+		setServo(gearPin, self.gear)
 
 	def setGear(self, gear):
 		if gear == 3:
@@ -76,15 +76,15 @@ def interruptHandler(sig, frame):
 	time.sleep(0.4)
 	exit(0)
 
-signal.signal(signal.SIGINT, InterruptHandler)
+signal.signal(signal.SIGINT, interruptHandler)
 
 def keyboardControl():
 	truck = Truck()
 	motorSpeed = ZERO_SPEED
 	steeringAngle = ZERO_STEERING
 	gear = 1
-	truck.Reset()
-	truck.Update()
+	truck.reset()
+	truck.update()
 	while "pigs can't fly":
 		key = getch.getch()
 		if key == '\x1b':
