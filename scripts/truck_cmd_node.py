@@ -25,7 +25,9 @@ class TruckNode:
         self.speed_backward_dict = {}
         self.sbd_precision = 2
 
-        
+        self.last_message_time = 0
+		self.last_speed = 0
+		
         self.truck = Truck()
     
 
@@ -57,7 +59,6 @@ class TruckNode:
     def callback(self, data):
             rospy.loginfo(rospy.get_caller_id() + "steering: %s, speed: %s", data.steering_angle, data.speed)
             
-
             phi = data.steering_angle
             v = data.speed
 
@@ -71,7 +72,13 @@ class TruckNode:
             elif v < self.MIN_SPEED:
                     v = self.MIN_SPEED
 
-
+			
+			
+			self.last_speed = v
+			self.last_message_time = rospy.get_time()
+			print "last message", self.last_message_time
+			
+			
             print "phi " + str(phi)
 
             steering_cmd = self.angle_dict[round(phi, self.ad_precision)]
@@ -85,12 +92,15 @@ class TruckNode:
             print "angle : " + str(steering_cmd)
             print "speed : " + str(speed_cmd)
             
-            self.truck.setSteering(steering_cmd)
+            
+			
+			
+			self.truck.setSteering(steering_cmd)
             self.truck.setSpeed(speed_cmd)
             self.truck.update()
+			
 
     def listener(self):
-            
             
             self.readDictionaries()
 
@@ -98,7 +108,17 @@ class TruckNode:
             self.truck.reset()
             self.truck.update()
             rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
-            rospy.spin()
+            
+			while not rospy.is_shutdown():
+				#if truck is moving and last message was a long time ago, stop truck
+				if self.last_speed >= 0:
+					if rospy.time() - self.last_message_time > 0.15:
+						self.truck.reset()
+						self.truck.update()
+				
+				rospy.sleep(0.1)
+				
+				
 
 
 def interruptHandler(sig, frame):
