@@ -100,26 +100,22 @@ class TruckNode:
             self.truck.update()
 			
 
-    def listener(self):
-            
-            self.readDictionaries()
+    def listener(self): 
+        self.readDictionaries()
 
-            rospy.init_node('truck_cmd_node', anonymous=True)
-            self.truck.reset()
-            self.truck.update()
-            rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
+        rospy.init_node('truck_cmd_node', anonymous=True)
+        self.truck.reset()
+        self.truck.update()
+        rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
             
-			while not rospy.is_shutdown():
-				#if truck is moving and last message was a long time ago, stop truck
-				if self.last_speed >= 0:
-					if rospy.time() - self.last_message_time > 0.15:
-						self.truck.reset()
-						self.truck.update()
-				
-				rospy.sleep(0.1)
-				
-				
-
+        while not rospy.is_shutdown():
+                #if truck is moving and last message was a long time ago, stop truck
+                if self.last_speed >= 0:
+                        if rospy.time() - self.last_message_time > 0.15:
+                                self.truck.reset()
+                                self.truck.update()
+                
+                rospy.sleep(0.1)
 
 def interruptHandler(sig, frame):
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
