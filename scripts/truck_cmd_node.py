@@ -57,7 +57,8 @@ class TruckNode:
 
 
     def callback(self, data):
-            rospy.loginfo(rospy.get_caller_id() + "steering: %s, speed: %s", data.steering_angle, data.speed)
+            print "callback"
+            #rospy.loginfo(rospy.get_caller_id() + "steering: %s, speed: %s", data.steering_angle, data.speed)
             
             phi = data.steering_angle
             v = data.speed
@@ -76,10 +77,10 @@ class TruckNode:
 			
             self.last_speed = v
             self.last_message_time = rospy.get_time()
-            print "last message", self.last_message_time
+            #print "last message", self.last_message_time
 			
 			
-            print "phi " + str(phi)
+            #print "phi " + str(phi)
 
             steering_cmd = self.angle_dict[round(phi, self.ad_precision)]
 
@@ -89,8 +90,8 @@ class TruckNode:
             else:
                     speed_cmd = self.speed_backward_dict[round(v, self.sbd_precision)]
 
-            print "angle : " + str(steering_cmd)
-            print "speed : " + str(speed_cmd)
+            #print "angle : " + str(steering_cmd)
+            #print "speed : " + str(speed_cmd)
             
             
 			
@@ -107,15 +108,17 @@ class TruckNode:
         self.truck.reset()
         self.truck.update()
         rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
-        rospy.spin()    
-        """while not rospy.is_shutdown():
+        #rospy.spin()    
+        while not rospy.is_shutdown():
                 #if truck is moving and last message was a long time ago, stop truck
-                if self.last_speed >= 0:
-                        if rospy.get_time() - self.last_message_time > 0.15:
-                                self.truck.reset()
-                                self.truck.update()
+                if self.last_speed >= -1:
+                    print "time", rospy.get_time() - self.last_message_time
+                    if rospy.get_time() - self.last_message_time > 1:
+                        print "didnt receive a message in 1 sek, resetting"
+                        self.truck.reset()
+                        self.truck.update()
                 
-                #rospy.sleep(0.1)"""
+                rospy.sleep(0.1)
 
 def interruptHandler(sig, frame):
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
