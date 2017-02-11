@@ -34,6 +34,7 @@ class CommandNode:
         self.last_message_time = rospy.get_time()
         self.last_speed = v
 
+        # look up what command to send to truck
         steering_cmd = interpolate.getSteeringCmd(phi)
         speed_cmd = interpolate.getSpeedCmd(v)
 
@@ -56,6 +57,7 @@ class CommandNode:
             
             rospy.sleep(0.1)
 
+# on ctrl c
 def interruptHandler(sig, frame):
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
 	print("Interrupted, reset servo...")
@@ -66,6 +68,7 @@ def interruptHandler(sig, frame):
 	time.sleep(0.4)
 	exit(0)
 
+#if program crashes
 def exit_handler():
     cn = CommandNode()
     cn.truck.reset()

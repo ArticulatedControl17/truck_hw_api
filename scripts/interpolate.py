@@ -5,6 +5,7 @@ import rospy
 
 generated = False
 
+#to how many decimal points should points to generated
 ANGLE_PRECISION = 1
 F_SPEED_PRECISION = 2
 B_SPEED_PRECISION = 2
@@ -14,25 +15,30 @@ max_angle = 0
 min_speed = 0
 max_speed = 0
 
+#lookup-tables for translating angles/velocity to commands to the truck
 angle_dict = {}
 f_speed_dict = {}
 b_speed_dict = {}
 
-
+#reads the measure points in measurements.py and interpolates
 def generateDictionaries():
 
     if generated:
         return
     
-    #angle
+    # ------------angle-----------
+
+    #get interpolate function
     fA = interp1d(m.angleMeasurements, m.angleInputs)
 
     maxA = max(m.angleMeasurements)
     minA = min(m.angleMeasurements)
 
+    #generate points
     xA = np.linspace(minA, maxA, (maxA - minA) * (10 ** ANGLE_PRECISION)).tolist()
     yA = fA(xA)
 
+    #round to remove floating point errors
     xA = [round(x, ANGLE_PRECISION) for x in xA]
     yA = [round(y, 2) for y in yA]
 
@@ -42,7 +48,8 @@ def generateDictionaries():
     angle_dict = dict(zip(xA, yA))
 
 
-    #forward speed
+    # ----------------forward speed----------------
+    #v = s/t
     speedsF = [0] + map (lambda x: m.forwardDistance/float(x), m.forwardMeasurements)
     inputsF = [m.zeroSpeedForward] + m.forwardInputs
 
@@ -61,7 +68,7 @@ def generateDictionaries():
     max_speed = max(xF)
 
 
-    #backward speed
+    # ------------------backward speed-----------
     speedsB = [0] + map (lambda x: m.backwardDistance/float(x), m.backwardMeasurements)
     inputsB = [m.zeroSpeedBackward] + m.backwardInputs
 
