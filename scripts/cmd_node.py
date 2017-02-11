@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 import signal
-import dictionaries
+import interpolate
 import atexit
 import time
 import rospy
-from driving import Truck
-from hw_api_ackermann.msg import AckermannDrive
+from truck_drive import Truck
+from truck_hw_api.msg import AckermannDrive
 
 
-class TruckNode:
+class CommandNode:
     def __init__(self):
 
-        dictionaries.generateDictionaries()
+        interpolate.generateDictionaries()
+        interpolate.setRosParams()
 
         self.last_message_time = 0
         self.last_speed = 0
@@ -20,8 +21,8 @@ class TruckNode:
         self.truck.reset()
         self.truck.update()
 
-        rospy.init_node('truck_cmd_node', anonymous=True)
-        rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
+        rospy.init_node('cmd_node', anonymous=True)
+        rospy.Subscriber('master_drive', AckermannDrive, self.callback)
 
 
 
@@ -33,8 +34,8 @@ class TruckNode:
         self.last_message_time = rospy.get_time()
         self.last_speed = v
 
-        steering_cmd = dictionaries.getSteeringCmd(phi)
-        speed_cmd = dictionaries.getSpeedCmd(v)
+        steering_cmd = interpolate.getSteeringCmd(phi)
+        speed_cmd = interpolate.getSpeedCmd(v)
 
 
         self.truck.setSteering(steering_cmd)
@@ -59,23 +60,23 @@ def interruptHandler(sig, frame):
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
 	print("Interrupted, reset servo...")
 	# Return to neutral
-	truck = TruckNode()
-	truck.truck.reset()
-	truck.truck.update()
+	cn = CommandNode()
+	cn.truck.reset()
+	cn.truck.update()
 	time.sleep(0.4)
 	exit(0)
 
 def exit_handler():
-    truck = TruckNode()
-    truck.truck.reset()
-    truck.truck.update()
+    cn = CommandNode()
+    cn.truck.reset()
+    cn.truck.update()
     exit(0)
 
 signal.signal(signal.SIGINT, interruptHandler)
 atexit.register(exit_handler)
 
 if __name__ == '__main__':
-	t = TruckNode()
-    t.spin()
+	cn = CommandNode()
+    cn.spin()
 
 

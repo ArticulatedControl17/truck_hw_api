@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from hw_api_ackermann.msg import AckermannDrive
+from truck_hw_api.msg import AckermannDrive
 
 def publisher():
 	pub = rospy.Publisher('truck_cmd', AckermannDrive, queue_size=10)

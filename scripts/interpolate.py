@@ -20,6 +20,10 @@ b_speed_dict = {}
 
 
 def generateDictionaries():
+
+    if generated:
+        return
+    
     #angle
     fA = interp1d(m.angleMeasurements, m.angleInputs)
 
@@ -74,13 +78,6 @@ def generateDictionaries():
     b_speed_dict = dict(zip(map(lambda x: -x, xB),yB))
     min_speed = -max(xB)
 
-    #set rospy global parameters
-    rospy.set_param_raw('min_angle', min_angle)
-    rospy.set_param_raw('max_angle', max_angle)
-    rospy.set_param_raw('min_speed', min_speed)
-    rospy.set_param_raw('max_speed', max_speed)
-
-
     generated = True
 
 
@@ -95,7 +92,6 @@ def getSteeringCmd(phi):
 
 
     return self.angle_dict[round(phi, ANGLE_PRECISION)]
-
 
 
 def getSpeedCmd(v):
@@ -114,3 +110,10 @@ def getSpeedCmd(v):
         return b_speed_dict[round(v, B_SPEED_PRECISION)]
 
 
+
+def setRosParams():
+    #set rospy global parameters
+    rospy.set_param_raw('min_angle', min_angle)
+    rospy.set_param_raw('max_angle', max_angle)
+    rospy.set_param_raw('min_speed', min_speed)
+    rospy.set_param_raw('max_speed', max_speed)
