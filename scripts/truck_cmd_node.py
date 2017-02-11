@@ -1,124 +1,59 @@
 #!/usr/bin/env python
-
-import rospy
 import signal
+import dictionaries
 import atexit
 import time
-import os
+import rospy
 from driving import Truck
 from hw_api_ackermann.msg import AckermannDrive
 
 
 class TruckNode:
     def __init__(self):
-        self.angle_dict = {}
-        self.ad_precision = 1
-        self.MAX_ANGLE = 0
-        self.MIN_ANGLE = 0
 
-        self.speed_forward_dict = {}
-        self.sfd_precision = 2
-
-        self.MAX_SPEED = 0
-        self.MIN_SPEED = 0
-
-        self.speed_backward_dict = {}
-        self.sbd_precision = 2
+        dictionaries.generateDictionaries()
 
         self.last_message_time = 0
-	self.last_speed = 0
+        self.last_speed = 0
 		
         self.truck = Truck()
-    
+        self.truck.reset()
+        self.truck.update()
 
-
-    def readDictionaries(self):
-        dirpath = os.path.dirname(os.path.abspath(__file__))
-
-        
-        with open(os.path.join(dirpath, 'dicts/angle_dict.txt'), 'r') as ad, \
-             open(os.path.join(dirpath, 'dicts/backward_speed_dict.txt'),'r') as bd, \
-             open(os.path.join(dirpath, 'dicts/forward_speed_dict.txt'),'r') as fd:
-            
-            self.angle_dict = eval(ad.read())
-            self.speed_backward_dict = eval(bd.read())
-            self.speed_forward_dict = eval(fd.read())
-
-
-            a_keys = self.angle_dict.keys()
-            self.MAX_ANGLE = max(a_keys)
-            self.MIN_ANGLE = min(a_keys)
-
-            self.MIN_SPEED = min(self.speed_backward_dict.keys())
-            self.MAX_SPEED = max(self.speed_forward_dict.keys())
-
-
+        rospy.init_node('truck_cmd_node', anonymous=True)
+        rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
 
 
 
     def callback(self, data):
-            print "callback"
-            #rospy.loginfo(rospy.get_caller_id() + "steering: %s, speed: %s", data.steering_angle, data.speed)
-            
-            phi = data.steering_angle
-            v = data.speed
-
-            if phi > self.MAX_ANGLE :
-                    phi = self.MAX_ANGLE
-            elif phi < self.MIN_ANGLE:
-                    phi = self.MIN_ANGLE
-
-            if v > self.MAX_SPEED:
-                    v = self.MAX_SPEED
-            elif v < self.MIN_SPEED:
-                    v = self.MIN_SPEED
-
-			
-			
-            self.last_speed = v
-            self.last_message_time = rospy.get_time()
-            #print "last message", self.last_message_time
-			
-			
-            #print "phi " + str(phi)
-
-            steering_cmd = self.angle_dict[round(phi, self.ad_precision)]
+        phi = data.steering_angle
+        v = data.speed
 
 
-            if v >= 0:
-                    speed_cmd = self.speed_forward_dict[round(v, self.sfd_precision)]
-            else:
-                    speed_cmd = self.speed_backward_dict[round(v, self.sbd_precision)]
+        self.last_message_time = rospy.get_time()
+        self.last_speed = v
 
-            #print "angle : " + str(steering_cmd)
-            #print "speed : " + str(speed_cmd)
-            
-            
-			
-			
-            self.truck.setSteering(steering_cmd)
-            self.truck.setSpeed(speed_cmd)
-            self.truck.update()
-			
+        steering_cmd = dictionaries.getSteeringCmd(phi)
+        speed_cmd = dictionaries.getSpeedCmd(v)
 
-    def listener(self): 
-        self.readDictionaries()
 
-        rospy.init_node('truck_cmd_node', anonymous=True)
-        self.truck.reset()
+        self.truck.setSteering(steering_cmd)
+        self.truck.setSpeed(speed_cmd)
         self.truck.update()
-        rospy.Subscriber("truck_cmd", AckermannDrive, self.callback)
+			
+
+    def spin(self): 
+
         #rospy.spin()    
         while not rospy.is_shutdown():
-                #if truck is moving and last message was a long time ago, stop truck
-                if self.last_speed >= -1:
-                    print "time", rospy.get_time() - self.last_message_time
-                    if rospy.get_time() - self.last_message_time > 1:
-                        print "didnt receive a message in 1 sek, resetting"
-                        self.truck.reset()
-                        self.truck.update()
-                
-                rospy.sleep(0.1)
+            #if truck is moving and last message was a long time ago, stop truck
+            if self.last_speed >= 0:
+                if rospy.get_time() - self.last_message_time > 1:
+                    print "didnt receive a message in 1 sec, resetting"
+                    self.truck.reset()
+                    self.truck.update()
+            
+            rospy.sleep(0.1)
 
 def interruptHandler(sig, frame):
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -131,15 +66,16 @@ def interruptHandler(sig, frame):
 	exit(0)
 
 def exit_handler():
-        truck = TruckNode()
-        truck.truck.reset()
-        truck.truck.update()
-        exit(0)
+    truck = TruckNode()
+    truck.truck.reset()
+    truck.truck.update()
+    exit(0)
 
 signal.signal(signal.SIGINT, interruptHandler)
 atexit.register(exit_handler)
 
 if __name__ == '__main__':
-	TruckNode().listener()
+	t = TruckNode()
+    t.spin()
 
 
