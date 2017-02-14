@@ -5,7 +5,7 @@ import atexit
 import time
 import rospy
 from truck_drive import Truck
-from truck_hw_api.msg import AckermannDrive
+from ackermann_msgs.msg import AckermannDrive
 
 
 class CommandNode:
@@ -29,7 +29,7 @@ class CommandNode:
     def callback(self, data):
         phi = data.steering_angle
         v = data.speed
-
+        print phi
 
         self.last_message_time = rospy.get_time()
         self.last_speed = v
@@ -38,6 +38,7 @@ class CommandNode:
         steering_cmd = interpolate.getSteeringCmd(phi)
         speed_cmd = interpolate.getSpeedCmd(v)
 
+        print steering_cmd, speed_cmd
 
         self.truck.setSteering(steering_cmd)
         self.truck.setSpeed(speed_cmd)
@@ -50,8 +51,8 @@ class CommandNode:
         while not rospy.is_shutdown():
             #if truck is moving and last message was a long time ago, stop truck
             if self.last_speed >= 0:
-                if rospy.get_time() - self.last_message_time > 1:
-                    print "didnt receive a message in 1 sec, resetting"
+                if rospy.get_time() - self.last_message_time > 0.4:
+                    print "didnt receive a message in 0.4 sec, resetting"
                     self.truck.reset()
                     self.truck.update()
             
@@ -79,7 +80,7 @@ signal.signal(signal.SIGINT, interruptHandler)
 atexit.register(exit_handler)
 
 if __name__ == '__main__':
-	cn = CommandNode()
+    cn = CommandNode()
     cn.spin()
 
 

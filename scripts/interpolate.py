@@ -22,7 +22,9 @@ b_speed_dict = {}
 
 #reads the measure points in measurements.py and interpolates
 def generateDictionaries():
-
+    global generated
+    global angle_dict, f_speed_dict, b_speed_dict,\
+           max_angle, min_angle, max_speed, min_speed
     if generated:
         return
     
@@ -35,7 +37,7 @@ def generateDictionaries():
     minA = min(m.angleMeasurements)
 
     #generate points
-    xA = np.linspace(minA, maxA, (maxA - minA) * (10 ** ANGLE_PRECISION)).tolist()
+    xA = np.linspace(minA, maxA, 1+(maxA - minA) * (10 ** ANGLE_PRECISION)).tolist()
     yA = fA(xA)
 
     #round to remove floating point errors
@@ -58,7 +60,7 @@ def generateDictionaries():
 
     fF = interp1d(speedsF, inputsF)
 
-    xF = np.linspace(0, maxS, (maxS * (10 ** F_SPEED_PRECISION))).tolist()
+    xF = np.linspace(0, maxS, 1+(maxS * (10 ** F_SPEED_PRECISION))).tolist()
     yF = fF(xF)
 
     xF = [round(x, F_SPEED_PRECISION) for x in xF]
@@ -76,39 +78,41 @@ def generateDictionaries():
 
     fB = interp1d(speedsB, inputsB)
 
-    xB = np.linspace(0, minS, (minS * (10 ** B_SPEED_PRECISION))).tolist()
+    xB = np.linspace(0, minS, 1+(minS * (10 ** B_SPEED_PRECISION))).tolist()
     yB = fB(xB)
 
     xB = [round(x, B_SPEED_PRECISION) for x in xB]
     yB = [round(y,2) for y in yB]
 
     b_speed_dict = dict(zip(map(lambda x: -x, xB),yB))
+
     min_speed = -max(xB)
 
     generated = True
 
 
 def getSteeringCmd(phi):
+    global generated
     if not generated:
         generateDictionaries()
+
     
-    if phi > self.MAX_ANGLE :
-        phi = self.MAX_ANGLE
-    elif phi < self.MIN_ANGLE:
-        phi = self.MIN_ANGLE
+    if phi > max_angle :
+        phi = max_angle
+    elif phi < min_angle:
+        phi = min_angle
 
-
-    return self.angle_dict[round(phi, ANGLE_PRECISION)]
+    return angle_dict[round(phi, ANGLE_PRECISION)]
 
 
 def getSpeedCmd(v):
     if not generated:
         generateDictionaries()
 
-    if v > self.MAX_SPEED:
-        v = self.MAX_SPEED
-    elif v < self.MIN_SPEED:
-        v = self.MIN_SPEED
+    if v > max_speed:
+        v = max_speed
+    elif v < min_speed:
+        v = min_speed
 
 
     if v >= 0:
@@ -120,7 +124,7 @@ def getSpeedCmd(v):
 
 def setRosParams():
     #set rospy global parameters
-    rospy.set_param_raw('min_angle', min_angle)
-    rospy.set_param_raw('max_angle', max_angle)
-    rospy.set_param_raw('min_speed', min_speed)
-    rospy.set_param_raw('max_speed', max_speed)
+    rospy.set_param('min_angle', min_angle)
+    rospy.set_param('max_angle', max_angle)
+    rospy.set_param('min_speed', min_speed)
+    rospy.set_param('max_speed', max_speed)

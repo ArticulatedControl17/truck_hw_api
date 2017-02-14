@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>hw_api_ackermann</name>
+  <name>truck_hw_api</name>
   <version>0.0.0</version>
   <description>The hw_api_test package</description>
 
