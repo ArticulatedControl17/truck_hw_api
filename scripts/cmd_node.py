@@ -51,7 +51,7 @@ class CommandNode:
         while not rospy.is_shutdown():
             #if truck is moving and last message was a long time ago, stop truck
             if self.last_speed >= 0:
-                if rospy.get_time() - self.last_message_time > 0.4:
+                if rospy.get_time() - self.last_message_time > 0.2:
                     print "didnt receive a message in 0.4 sec, resetting"
                     self.truck.reset()
                     self.truck.update()
