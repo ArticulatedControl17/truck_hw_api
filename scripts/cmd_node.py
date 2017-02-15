@@ -4,6 +4,7 @@ import interpolate
 import atexit
 import time
 import rospy
+import math
 from truck_drive import Truck
 from ackermann_msgs.msg import AckermannDrive
 
@@ -47,7 +48,7 @@ class CommandNode:
         #rospy.spin()    
         while not rospy.is_shutdown():
             #if truck is moving and last message was a long time ago, stop truck
-            if self.last_speed >= 0:
+            if math.abs(self.last_speed) >= 0:
                 lastmsg = rospy.get_time() - self.last_message_time
                 if lastmsg > 0.2:
                     rospy.logwarn("cmd_node: didnt receive a message in 0.2 sec, resetting. last message = %s", lastmsg)
