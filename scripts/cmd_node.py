@@ -29,7 +29,6 @@ class CommandNode:
     def callback(self, data):
         phi = data.steering_angle
         v = data.speed
-        print phi
 
         self.last_message_time = rospy.get_time()
         self.last_speed = v
@@ -37,8 +36,6 @@ class CommandNode:
         # look up what command to send to truck
         steering_cmd = interpolate.getSteeringCmd(phi)
         speed_cmd = interpolate.getSpeedCmd(v)
-
-        print steering_cmd, speed_cmd
 
         self.truck.setSteering(steering_cmd)
         self.truck.setSpeed(speed_cmd)
@@ -51,8 +48,9 @@ class CommandNode:
         while not rospy.is_shutdown():
             #if truck is moving and last message was a long time ago, stop truck
             if self.last_speed >= 0:
-                if rospy.get_time() - self.last_message_time > 0.2:
-                    print "didnt receive a message in 0.4 sec, resetting"
+                lastmsg = rospy.get_time() - self.last_message_time
+                if lastmsg > 0.2:
+                    rospy.logwarn("cmd_node: didnt receive a message in 0.2 sec, resetting. last message = %s", lastmsg)
                     self.truck.reset()
                     self.truck.update()
             
@@ -61,7 +59,7 @@ class CommandNode:
 # on ctrl c
 def interruptHandler(sig, frame):
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
-	print("Interrupted, reset servo...")
+	rospy.loginfo("Interrupted, reset servo...")
 	# Return to neutral
 	cn = CommandNode()
 	cn.truck.reset()
@@ -71,6 +69,7 @@ def interruptHandler(sig, frame):
 
 #if program crashes
 def exit_handler():
+    rospy.logfatal("exit handler in cmd_node invoked")
     cn = CommandNode()
     cn.truck.reset()
     cn.truck.update()
