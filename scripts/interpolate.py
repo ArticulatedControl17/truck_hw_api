@@ -107,14 +107,14 @@ def generateDictionaries():
     yT = fT(xT)
 
     #round to remove floating point errors
-    xT = [round(x)) for x in xT]
+    xT = [round(x) for x in xT]
     yT = [round(y, 2) for y in yT]
 
-    max_angle = max(xT)
-    min_angle = min(xT)
+    max_trailersignal = max(xT)
+    min_trailersignal = min(xT)
 
-    angle_dict = dict(zip(xT, yT))
-
+    trailer_dict = dict(zip(xT, yT))
+    
 
 def getSteeringCmd(phi):
     global generated
