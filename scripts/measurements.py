@@ -28,3 +28,8 @@ zeroSpeedBackward = 28.2
 #seconds
 backwardInputs = [26, 20, 16]
 backwardMeasurements = [8.49, 5.20, 4.34]
+
+
+# --------trailer sensor----------
+trailer_angles = [41,26,14,0,-13,-26,-38]
+trailer_signals = [28600, 16300, 14200, 12400, 10650, 8350, 6500] 
