@@ -1,0 +1,5 @@
+<launch>
+  <node name="cmd_node" pkg="truck_hw_api" type="cmd_node.py" />
+  <node name="trailersensor" pkg="truck_hw_api" type="trailersensor.py" />
+  
+</launch>
