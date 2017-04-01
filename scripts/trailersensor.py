@@ -27,7 +27,7 @@ class TrailerSensorNode:
             value = self.adc.read_adc(PIN, gain=self.GAIN)
             print value
             angle = interpolate.getTrailerAngle(value)
-            self.pub.publish(Float32(angle))
+            self.pub.publish(Float32(-angle))
 
 
 if __name__ == '__main__':
